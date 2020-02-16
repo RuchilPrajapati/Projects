@@ -1,0 +1,170 @@
+<html>
+ <head>
+ </head>
+ <body>
+ <button id="start_scan" onclick="start_scan();">Scan</button>
+<!-- <video id="video" width="640" height="480" autoplay='true'></video>-->
+<!-- <button id="snap">Snap Photo</button>-->
+<!-- <canvas id="canvas" width="640" height="480"></canvas>-->
+<p id="p"></p>
+ <script src="qrcodedecode.js">
+  </script>
+ <script>
+   var globalStream;
+   var scan_call;
+   function start_scan() {
+      //if camera is given permission
+      function cammera_accessed(stream)
+	  { //declaring and adding required variables and properties
+	    var video=document.createElement("VIDEO");
+	        video.setAttribute("id","video");
+	        video.setAttribute("width","640");
+			video.setAttribute("height","480");
+			video.setAttribute("autoplay","true");
+	    /*var snap_button=document.createElement("BUTTON");
+			snap_button.setAttribute("id","snap");
+			snap_button.innerHTML="Snap";
+			snap_button.setAttribute("onclick","snap_qr_code();");*/
+	    var stop_scan_button=document.createElement("BUTTON");
+			stop_scan_button.setAttribute("id","stop_scan");
+			stop_scan_button.innerHTML="Stop Scanning";
+			stop_scan_button.setAttribute("onclick","stop_scanning();");
+	    var scan_button=document.getElementById("start_scan");
+			scan_button.parentNode.removeChild(scan_button);
+	  
+	    //adding elements to webpage
+	    document.body.appendChild(video);
+	    //document.body.appendChild(snap_button);
+	    document.body.appendChild(stop_scan_button);
+		globalStream=stream;
+		video.srcObject = stream;
+        video.play();
+		scan_call=setInterval(scan_qr_code,300);
+	  }
+	  
+	  // Get access to the camera!
+      if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      // Not adding `{ audio: true }` since we only want video now
+          navigator.mediaDevices.getUserMedia({ video:true}).then(function(stream) {
+           //     video.src = window.URL.createObjectURL(stream);
+		          cammera_accessed(stream);
+                  
+          }).catch(function (error){ alert(error); });
+      }
+      // Legacy code below: getUserMedia 
+      else if(navigator.getUserMedia) { // Standard
+          navigator.getUserMedia({ video: true }, function(stream) {
+                  cammera_accessed(stream);				 
+          }, errBack);
+      } else if(navigator.webkitGetUserMedia) { // WebKit-prefixed
+          navigator.webkitGetUserMedia({ video: true }, function(stream){
+                  cammera_accessed(window.webkitURL.createObjectURL(stream));				  
+          }, errBack);
+      } else if(navigator.mozGetUserMedia) { // Mozilla-prefixed
+          navigator.mozGetUserMedia({ video: true }, function(stream){
+                  cammera_accessed(stream);				  
+          }, errBack);
+       }	  	   
+   }
+   
+   function stop_scanning(){
+      var video=document.getElementById("video"); 
+	  //var snap_button=document.getElementById("snap");	   
+	  var stop_scan_button=document.getElementById("stop_scan");	   
+	  var scan_button=document.createElement("BUTTON");
+	    scan_button.setAttribute("id","start_scan");
+	    scan_button.innerHTML="Scan";
+		scan_button.setAttribute("onclick","start_scan();");
+		document.body.append(scan_button);
+	  video.pause();
+	  video.removeAttribute('src');
+	  video.parentNode.removeChild(video);	  
+	  //snap_button.parentNode.removeChild(snap_button);
+	  stop_scan_button.parentNode.removeChild(stop_scan_button);	  
+	  globalStream.getTracks().forEach(function(track){
+	   track.stop();
+	  });	  
+      clearInterval(scan_call);      
+   }
+   
+   /*function snap_qr_code(){
+       // Trigger photo take
+	   // Elements for taking the snapshot
+	   var canvas;
+	   var send_button;
+       if(document.getElementById("canvas")==null)
+	   { canvas = document.createElement('CANVAS');
+	     canvas.setAttribute("id","canvas");
+	     canvas.setAttribute("height","480");
+	     canvas.setAttribute("width","640");
+	     document.body.append(canvas);
+		 send_button=document.createElement("BUTTON");
+		 send_button.setAttribute("id","send_button");
+		 send_button.innerHTML="Send";
+		 document.body.appendChild(send_button);
+	   }
+       else { canvas=document.getElementById("canvas"); }	   
+	   var video=document.getElementById("video");
+       var context = canvas.getContext('2d'); 
+       context.drawImage(video, 0, 0, 640, 480);	
+	   openQRCamera(canvas);       
+   }*/
+   
+   function scan_qr_code(){
+       // Trigger photo take
+	   // Elements for taking the snapshot
+	   var res1,res2;
+	   var canvas = document.createElement('CANVAS');
+	     canvas.setAttribute("id","canvas");
+	     canvas.setAttribute("height","480");
+	     canvas.setAttribute("width","640");	     		 		 	         
+	   var video=document.getElementById("video");
+       var context = canvas.getContext('2d'); 
+       context.drawImage(video, 0, 0, 640, 480);	
+	   openQRCamera(canvas);
+	  /* if(res1=openQRCamera(canvas))
+	   { clearInterval(scan_call);
+	     context.drawImage(video,0,0,640,480);
+		 alert(res1);
+		 if(res2=openQRCamera(canvas))
+		 { if(res2==res1){
+		       //redirect to check in php
+			   alert(res1);
+		   }
+		   else { scan_call=setInterval(scan_qr_code,300); }
+		 }
+		 else{ setInterval(scan_qr_code,300); }
+	   }*/
+   }
+   
+   function openQRCamera(node) {
+     //var reader = new FileReader();
+	 //reader.onload=function(){ alert("hello");
+	       // node.value="";
+			qrcode.callback=function(res){
+			   if(res instanceof Error) {
+			      //alert("No QR code found. Please make sure the QR code is witnin the camera's frame and try again.");
+				                        }
+				else{ alert(res);
+               		 /* var form=document.createElement("FORM");
+                      var input=document.createElement("INPUT");
+                      form.setAttribute("method","POST");
+					  form.setAttribute("action","verify.php");
+					  input.setAttribute("name","qrcode");
+					  input.setAttribute("type","password");
+					  input.setAttribute("value",res);
+					  form.appendChild(input);
+					  document.body.appendChild(form);*/
+				    }
+				};
+			qrcode.decode(node.toDataURL());
+			} 
+		//		reader.readAsDataURL(node);
+		//		}
+  //var video = document.getElementById('video');  
+  var errBack = function(e) {
+            	console.log('An error has occurred!', e)
+            };  
+</script>
+</body>
+</html>
